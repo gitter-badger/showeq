@@ -101,12 +101,17 @@ void SEQLogger::outputData(uint32_t len,
   if (!m_fp)
     return;
 
+  if (len > 1000000) {
+    fprintf (m_fp, "%d length data..\n\n", len);
+  }
+
   char hex[128];
   char asc[128];
-  char tmp[32];
-  
-  hex[0] = 0;
-  asc[0] = 0;
+  char tmp[128];
+  memset(hex, 0, 128);
+  memset(tmp, 0, 128);
+  memset(asc, 0, 128);
+
   unsigned int c;
   
   for (c = 0; c < len; c ++)
