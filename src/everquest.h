@@ -2241,6 +2241,14 @@ struct worldMOTDStruct
   /*???*/ uint8_t unknownXXX[3];
 };
 
+struct clientLoginInfoStruct
+{
+  char    uid[6];
+  uint8_t sep;
+  char    key[10];
+  uint8_t unknownXYZ[447];
+};
+
 // Restore structure packing to default
 #pragma pack()
 

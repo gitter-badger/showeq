@@ -1136,4 +1136,13 @@ uint16_t EQPacket::serverSeqExp(int stream)
   return m_streams[stream]->arqSeqExp();
 }
 
+void EQPacket::setP99Key(const char* key)
+{
+  // add the key to all the streams
+  //seqDebug("EQPacket::setP99Key setting key on streams: %s", key);
+  m_client2WorldStream->setP99Key(key);
+  m_world2ClientStream->setP99Key(key);
+  m_client2ZoneStream->setP99Key(key);
+  m_zone2ClientStream->setP99Key(key);
+}
 #include "packet.moc"
