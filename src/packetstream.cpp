@@ -1256,7 +1256,7 @@ void EQPacketStream::close(uint32_t sessionId, EQStreamID streamId,
 uint16_t EQPacketStream::calculateCRC(EQProtocolPacket& packet)
 {
   // CRC is at the end of the raw payload, 2 bytes.
-  return ::calcCRC16(packet.rawPacket(), packet.rawPacketLength()-2, 
+  return ::calcCRC16(packet.rawPacket(), (packet.rawPacketLength() >= 2 ? packet.rawPacketLength()-2 : 0),
     m_sessionKey);
 }
 
