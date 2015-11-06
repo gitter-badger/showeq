@@ -79,6 +79,7 @@ class EQPacketStream : public QObject
   void close(uint32_t sessionId, EQStreamID streamid, uint8_t sessionTracking);
   uint16_t calculateCRC(EQProtocolPacket& packet);
   uint32_t getSessionKey() const { return m_sessionKey; }
+  void setP99Key(const char* key);
   
  public slots:
   void handlePacket(EQUDPIPPacketFormat& pf);
@@ -114,9 +115,8 @@ class EQPacketStream : public QObject
   void setCache(uint16_t serverArqSeq, EQProtocolPacket& packet);
   void processCache();
   void processPacket(EQProtocolPacket& packet, bool subpacket);
-  void dispatchPacket(const uint8_t* data, size_t len,
+  void dispatchPacket(uint8_t* data, size_t len,
 		      uint16_t opCode, const EQPacketOPCode* opcodeEntry);
-
 
   EQPacketOPCodeDB& m_opcodeDB;
   QPtrDict<EQPacketDispatch> m_dispatchers;
@@ -144,6 +144,7 @@ class EQPacketStream : public QObject
   // encryption
   int64_t m_decodeKey;
   bool m_validKey;
+  char m_p99Key[10];
 };
 
 inline uint8_t EQPacketStream::sessionTracking()

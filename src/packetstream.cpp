@@ -36,7 +36,7 @@
 //#define PACKET_SESSION_DIAG 3
 
 // diagnose structure size changes
-#define PACKET_PAYLOAD_SIZE_DIAG 1
+// #define PACKET_PAYLOAD_SIZE_DIAG 1
 
 // used to translate EQStreamID to a string for debug and reporting
 static const char* const EQStreamStr[] = {"client-world", "world-client", "client-zone", "zone-client"};
@@ -80,7 +80,7 @@ EQPacketStream::EQPacketStream(EQStreamID streamid, uint8_t dir,
     m_sessionClientPort(0),
     m_maxLength(0),
     m_decodeKey(0),
-    m_validKey(true)
+    m_validKey(false)
 {
   m_dispatchers.setAutoDelete(true);
 }
@@ -155,6 +155,8 @@ bool EQPacketStream::connect2(const QString& opcodeName,
     // insert dispatcher into dispatcher dictionary
     m_dispatchers.insert((void*)payload, dispatch);
   }
+  // initialize the p99 key
+  strcpy(m_p99Key,"FFFFFFFFFF");
 
   // attempt to connect the dispatch object to the receiver
   return dispatch->connect(receiver, member);
@@ -386,13 +388,14 @@ void EQPacketStream::processCache()
 #endif
 }
 
-void EQPacketStream::dispatchPacket(const uint8_t* data, size_t len, 
+void EQPacketStream::dispatchPacket(uint8_t* data, size_t len, 
 				    uint16_t opCode, 
 				    const EQPacketOPCode* opcodeEntry)
 {
   emit decodedPacket(data, len, m_dir, opCode, opcodeEntry);
 
   bool unknown = true;
+  uint8_t *data2;
 
   // unless there is an opcode entry, there is nothing to dispatch...
   if (opcodeEntry)
@@ -402,9 +405,44 @@ void EQPacketStream::dispatchPacket(const uint8_t* data, size_t len,
 
 #ifdef PACKET_INFO_DIAG
     seqDebug(
-	    "dispatchPacket: attempting to dispatch opcode %#04x '%s'",
-	    opcodeEntry->opcode(), (const char*)opcodeEntry->name());
+	    "dispatchPacket: attempting to dispatch opcode %#04x '%s' (size %d)",
+	    opcodeEntry->opcode(), (const char*)opcodeEntry->name(),len);
 #endif
+
+    // P99: check for the opcodes we need to decrypt and decrypt the entire payload (2e78)
+    bool decrypt = false;
+    if(m_validKey)
+    {
+      switch(opcodeEntry->opcode())
+      {
+        case 0x2e78:
+	  decrypt = true;
+	  break;
+	case 0x7213:
+	  decrypt = true;
+	  break;
+	case 0x1860:
+	  decrypt = true;
+	  break;
+      }
+    }
+
+    if(decrypt && m_validKey)
+    {
+      uint16_t i    = 0;
+      data2 = (uint8_t*)malloc(len);
+      memcpy(data2,data,len);
+ 
+      while(i<len)
+      {
+        data2[i] = data[i] ^ m_p99Key[i%10];
+        if(data[i] == m_p99Key[i%10]) data2[i] = m_p99Key[i%10];
+	if(data[i] == 0) data2[i] = 0;
+	i++;
+      }
+      memcpy(data,data2,len);
+      free(data2);
+    }
 
     // iterate over the payloads in the opcode entry, and dispatch matches
     EQPayloadListIterator pit(*opcodeEntry);
@@ -862,7 +900,6 @@ void EQPacketStream::processPacket(EQProtocolPacket& packet, bool isSubpacket)
         seqDebug("SEQ: Completed oversized app packet on stream %s with seq %04x, total size %d opcode %04x", 
           EQStreamStr[m_streamid], seq, m_fragment.size()-2, fragOpCode);
 #endif
-
           // dispatch fragment. Skip opcode.
           if (fragOpCode == 0)
           {
@@ -1216,4 +1253,10 @@ uint16_t EQPacketStream::calculateCRC(EQProtocolPacket& packet)
     m_sessionKey);
 }
 
+void EQPacketStream::setP99Key(const char *key)
+{
+	//seqDebug("setP99Key called with key %s", key);
+	strcpy(m_p99Key, key);
+	m_validKey = true;
+}
 #include "packetstream.moc"

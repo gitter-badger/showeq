@@ -1752,6 +1752,12 @@ EQInterface::EQInterface(DataLocationMgr* dlm,
 	     m_filterMgr, SLOT(loadZone(const QString&)));
    }
 
+   // p99 test
+   m_packet->connect2("OP_SendLoginInfo", SP_World, DIR_Client,
+		      "clientLoginInfoStruct", SZC_None,
+		      this,
+		      SLOT(extractP99Key(const uint8_t*)));
+
    if (m_guildmgr)
    {
      m_packet->connect2("OP_GuildList", SP_World, DIR_Server, 
@@ -1784,7 +1790,7 @@ EQInterface::EQInterface(DataLocationMgr* dlm,
      m_packet->connect2("OP_FormattedMessage", SP_Zone, DIR_Server,
 			"formattedMessageStruct", SZC_None,
 			m_messageShell,
-			SLOT(formattedMessage(const uint8_t*, size_t, uint8_t)));
+			SLOT(formattedMessage(const uint8_t*, size_t, uint8_t))); 
      m_packet->connect2("OP_SimpleMessage", SP_Zone, DIR_Server,
 			"simpleMessageStruct", SZC_Match,
 			m_messageShell,
@@ -4294,7 +4300,7 @@ void EQInterface::setExp(uint32_t totalExp, uint32_t totalTick,
 {
   if (m_stsbarExp)
   {
-    char expperc[5];
+    char expperc[20];
     sprintf(expperc, "%.2f", totalTick*100.0/330.0);
 
     m_stsbarExp->setText(QString("Exp: %1 (%2/330, %3%)")
@@ -6102,6 +6108,13 @@ void EQInterface::setDockEnabled(QDockWindow* dw, bool enable)
   QMainWindow::setDockEnabled(dw, DockBottom, enable);
   QMainWindow::setDockEnabled(dw, DockLeft, enable);
   QMainWindow::setDockEnabled(dw, DockRight, enable);
+}
+
+void EQInterface::extractP99Key(const uint8_t* data)
+{
+  const clientLoginInfoStruct* clis = (const clientLoginInfoStruct*)data;
+  seqInfo("P99 encryption key detected: %s", clis->key);
+  m_packet->setP99Key(clis->key);  
 }
 
 #include "interface.moc"

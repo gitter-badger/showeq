@@ -303,6 +303,9 @@ class EQInterface:public QMainWindow
    void toggleEQDisplayTime(int);
    void toggleUseColor(int);
 
+   // p99
+   void extractP99Key(const uint8_t* data);
+
  protected:
    bool getMonitorOpCodeList(const QString& title, QString& opcodeList);
    int setTheme(int id);
@@ -483,4 +486,3 @@ class EQInterface:public QMainWindow
 };
 
 #endif // EQINT_H
-

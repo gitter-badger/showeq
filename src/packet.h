@@ -87,6 +87,7 @@ class EQPacket : public QObject
    bool connect2(const QString& opcodeName, EQStreamPairs sp,
 		 uint8_t dir, const char* payload,  EQSizeCheckType szt, 
 		 const QObject* receiver, const char* member);
+   void setP99Key(const char* key);
 
  public slots:
    void processPackets(void);
