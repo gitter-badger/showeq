@@ -83,7 +83,7 @@ static const char *id="@(#) $Id$ $Name$";
 #define   RESTORE_ZONE_STATE            7
 #define   RESTORE_SPAWNS                8
 #define   RESTORE_ALL                   9
-
+#define	  P99_KEY			129	
 /* Note that ASCII 32 is a space, best to stop at 31 and pick up again
    at 128 or higher
 */
@@ -148,6 +148,7 @@ static struct option option_list[] = {
   {"restore-zone",                 no_argument,        NULL, RESTORE_ZONE_STATE},
   {"restore-spawns",               no_argument,        NULL, RESTORE_SPAWNS},
   {"restore-all",                  no_argument,        NULL, RESTORE_ALL},
+  {"p99-key",			   required_argument,  NULL, P99_KEY},
   {0,                              0,                  0,     0}
 };
 
@@ -675,6 +676,12 @@ int main (int argc, char **argv)
 	   showeq_params->restoreSpawns = true;
 	   break;
 	 }
+	case P99_KEY:
+	{
+           pSEQPrefs->setPrefString("P99Key", "PacketLogging",
+                                    optarg, XMLPreferences::Runtime);
+	   break;		
+	}
 
 
          /* Spit out the help */
